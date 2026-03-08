@@ -1,145 +1,147 @@
-# PyTorch Template for DL projects
+# Домашнее задание 4: Fine-tuning MusicGen
 
-<p align="center">
-  <a href="#about">About</a> •
-  <a href="#tutorials">Tutorials</a> •
-  <a href="#examples">Examples</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#how-to-use">How To Use</a> •
-  <a href="#useful-links">Useful Links</a> •
-  <a href="#credits">Credits</a> •
-  <a href="#license">License</a>
-</p>
+В этом домашнем задании вам предстоит провести **fine-tuning** модели MusicGen из репозитория [AudioCraft](https://github.com/facebookresearch/audiocraft).
 
-<p align="center">
-<a href="https://github.com/Blinorot/pytorch_project_template/generate">
-  <img src="https://img.shields.io/badge/use%20this-template-green?logo=github">
-</a>
-<a href="https://github.com/Blinorot/pytorch_project_template/blob/main/LICENSE">
-   <img src=https://img.shields.io/badge/license-MIT-blue.svg>
-</a>
-<a href="https://github.com/Blinorot/pytorch_project_template/blob/main/CITATION.cff">
-   <img src="https://img.shields.io/badge/cite-this%20repo-purple">
-</a>
-</p>
+**Максимальный балл:** 100 баллов
+*   **50 баллов:** Реализация пайплайна (код, сбор данных, модификация AudioCraft, запуск обучения).
+*   **50 баллов:** Качество генерации и следование промптам (оценивается по 5 тестовым заданиям).
 
-## About
+---
 
-This repository contains a template for [PyTorch](https://pytorch.org/)-based Deep Learning projects.
+## Часть 1. Реализация пайплайна (50 баллов)
 
-The template utilizes different python-dev techniques to improve code readability. Configuration methods enhance reproducibility and experiments control.
+В этой части вам предстоит написать код для подготовки данных и настройки обучения. Результатом должен быть рабочий репозиторий и запущенный процесс файнтюнинга.
 
-The repository is released as a part of the [HSE DLA course](https://github.com/markovka17/dla), however, can easily be adopted for any DL-task.
+### 1. Сбор данных MusicCaps (10 баллов)
+Датасет [MusicCaps](https://huggingface.co/datasets/google/MusicCaps) содержит ссылки на YouTube и текстовые описания.
+*   Напишите скрипт для скачивания аудио.
+*   **Важно:** Не скачивайте видео целиком! Используйте связку `yt-dlp` (для получения прямой ссылки на аудиопоток) и `ffmpeg` (для скачивания конкретного 10-секундного фрагмента напрямую в `.wav` формате.
 
-This template is the official recommended template for the [EPFL CS-433 ML Course](https://www.epfl.ch/labs/mlo/machine-learning-cs-433/).
+### 2. Обогащение метаданных с помощью LLM (15 баллов)
+Оригинальные описания в MusicCaps — это просто сплошной текст. MusicGen лучше обучается на структурированных данных.
+*   Используйте любую LLM (OpenAI, Gemini, Claude, локальную Llama 3), чтобы перевести сырые текстовые описания (`caption`) в строгий JSON-формат.
+*   **Обязательная схема JSON для каждого трека:**
+    ```json
+    {
+      "description": "string",
+      "general_mood": "string",
+      "genre_tags": ["string"],
+      "lead_instrument": "string",
+      "accompaniment": "string",
+      "tempo_and_rhythm": "string",
+      "vocal_presence": "string",
+      "production_quality": "string"
+    }
+    ```
+*   Сохраните результаты в виде `.json` файлов рядом с каждым `.wav` файлом (или соберите в один большой JSON и напишите скрипт-импортер).
 
-> 📖 **If you use this template in your work, please cite this repository or include a reference. Attribution supports the project and encourages continued development.**
+### 3. Модификация AudioCraft (15 баллов)
+По умолчанию [AudioCraft](https://github.com/facebookresearch/audiocraft) не знает про ваши новые поля.
 
-## Tutorials
+*   Сделайте форк/клон репозитория AudioCraft.
+*   Найдите датакласс `MusicInfo` (обычно в `audiocraft/data/music_dataset.py`) и добавьте туда новые поля из вашей JSON-схемы.
+*   Обновите логику чтения метаданных, чтобы при загрузке датасета эти поля корректно парсились и передавались в текстовый энкодер.
 
-This template utilizes experiment tracking techniques, such as [WandB](https://docs.wandb.ai/) and [Comet ML](https://www.comet.com/docs/v2/), and [Hydra](https://hydra.cc/docs/intro/) for the configuration. It also automatically reformats code and conducts several checks via [pre-commit](https://pre-commit.com/). If you are not familiar with these tools, we advise you to look at the tutorials below:
+### 4. Настройка конфигов и запуск обучения (10 баллов)
+*   Создайте манифесты (`.jsonl.gz`) для train и valid выборок.
+*   Настройте конфигурацию Hydra.
+*   **Важно:** Убедитесь, что параметры `merge_text_p` и `drop_desc_p` (или `drop_other_p`) настроены так, чтобы модель обращала внимание на ваши новые структурированные поля, но при этом сохраняла способность к Classifier-Free Guidance.
+*   Запустите файнтюнинг модели `musicgen-small` или `musicgen-medium` на собранном датасете.
 
-- [Python Dev Tips](https://github.com/ebezzam/python-dev-tips): information about [Git](https://git-scm.com/doc), [pre-commit](https://pre-commit.com/), [Hydra](https://hydra.cc/docs/intro/), and other stuff for better Python code development. The YouTube recording of the workshop is available [here](https://youtu.be/okxaTuBdDuY).
+---
 
-- [Seminar on R&D Coding 2025](https://youtu.be/PE1zaW5it_A): Seminar from the [LauzHack Deep Learning Bootcamp](https://github.com/LauzHack/deep-learning-bootcamp/) with discussion on logging, project-based coding, configuration, and reproducibility. The materials can be found [here](https://github.com/LauzHack/deep-learning-bootcamp/tree/summer25/day05).
+## Часть 2. Оценка качества генерации (50 баллов)
 
-- [Seminar on R&D Coding 2024](https://youtu.be/sEA-Js5ZHxU): Seminar from the [LauzHack Deep Learning Bootcamp](https://github.com/LauzHack/deep-learning-bootcamp/) with template discussion and reasoning. It also explains how to work with [WandB](https://docs.wandb.ai/). The seminar materials can be found [here](https://github.com/LauzHack/deep-learning-bootcamp/blob/main/day03/Seminar_WandB_and_Coding.ipynb).
+После того как ваша модель обучится, вам нужно сгенерировать 5 треков (длительностью 10-15 секунд) по заранее заданным структурированным промптам. 
 
-- [HSE DLA Course Introduction Week](https://github.com/markovka17/dla/tree/2024/week01): combines the two seminars above into one with some updates, including an extra example for [Comet ML](https://www.comet.com/docs/v2/).
+Каждый сгенерированный трек оценивается в **10 баллов** (5 баллов за качество звука/отсутствие артефактов + 5 баллов за точное следование всем полям промпта).
 
-- [PyTorch Basics](https://github.com/markovka17/dla/tree/2024/week01/intro_to_pytorch): several notebooks with [PyTorch](https://pytorch.org/docs/stable/index.html) basics and corresponding seminar recordings from the [LauzHack Deep Learning Bootcamp](https://github.com/LauzHack/deep-learning-bootcamp/).
+### Тестовые промпты для инференса:
 
-To start working with a template, just click on the `use this template` button.
-
-<a href="https://github.com/Blinorot/pytorch_project_template/generate">
-  <img src="https://img.shields.io/badge/use%20this-template-green?logo=github">
-</a>
-
-You can choose any of the branches as a starting point. [Set your choice as the default branch](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/changing-the-default-branch) in the repository settings. You can also [delete unnecessary branches](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-and-deleting-branches-within-your-repository).
-
-## Examples
-
-> [!IMPORTANT]
-> The main branch leaves some of the code parts empty or fills them with dummy examples, showing just the base structure. The final users can add code required for their own tasks.
-
-You can find examples of this template completed for different tasks in other branches:
-
-- [Image classification](https://github.com/Blinorot/pytorch_project_template/tree/example/image-classification): simple classification problem on [MNIST](https://yann.lecun.com/exdb/mnist/) and [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) datasets.
-
-- [ASR](https://github.com/Blinorot/pytorch_project_template/tree/example/asr): template for the automatic speech recognition (ASR) task. Some of the parts (for example, `collate_fn` and beam search for `text_encoder`) are missing for studying purposes of [HSE DLA course](https://github.com/markovka17/dla).
-
-## Installation
-
-Installation may depend on your task. The general steps are the following:
-
-0. (Optional) Create and activate new environment using [`conda`](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html) or `venv` ([`+pyenv`](https://github.com/pyenv/pyenv)).
-
-   a. `conda` version:
-
-   ```bash
-   # create env
-   conda create -n project_env python=PYTHON_VERSION
-
-   # activate env
-   conda activate project_env
-   ```
-
-   b. `venv` (`+pyenv`) version:
-
-   ```bash
-   # create env
-   ~/.pyenv/versions/PYTHON_VERSION/bin/python3 -m venv project_env
-
-   # alternatively, using default python version
-   python3 -m venv project_env
-
-   # activate env
-   source project_env/bin/activate
-   ```
-
-1. Install all required packages
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Install `pre-commit`:
-   ```bash
-   pre-commit install
-   ```
-
-## How To Use
-
-To train a model, run the following command:
-
-```bash
-python3 train.py -cn=CONFIG_NAME HYDRA_CONFIG_ARGUMENTS
+**Промпт 1:**
+```json
+{
+  "description": "An epic and triumphant orchestral soundtrack featuring powerful brass and a sweeping string ensemble, driven by a fast march-like rhythm and an epic background choir, recorded with massive stadium reverb.",
+  "general_mood": "Epic, heroic, triumphant, building tension",
+  "genre_tags": ["Cinematic", "Orchestral", "Soundtrack"],
+  "lead_instrument": "Powerful brass section (horns, trombones)",
+  "accompaniment": "Sweeping string ensemble, heavy cinematic percussion, timpani",
+  "tempo_and_rhythm": "Fast, driving, march-like rhythm",
+  "vocal_presence": "Epic choir in the background (wordless chanting)",
+  "production_quality": "High fidelity, wide stereo image, massive stadium reverb"
+}
+```
+**Промпт 2:**
+```json
+{
+  "description": "A relaxing lo-fi hip-hop instrumental with a muffled electric piano playing jazz chords over a dusty vinyl crackle, deep sub-bass, and a slow boom-bap drum loop.",
+  "general_mood": "Relaxing, nostalgic, chill, melancholic",
+  "genre_tags": ["Lo-Fi Hip Hop", "Chillhop", "Instrumental"],
+  "lead_instrument": "Muffled electric piano (Rhodes) playing jazz chords",
+  "accompaniment": "Dusty vinyl crackle, deep sub-bass, soft boom-bap drum loop",
+  "tempo_and_rhythm": "Slow, laid-back, swinging groove",
+  "vocal_presence": "None",
+  "production_quality": "Lo-Fi, vintage, warm tape saturation, slightly muffled high frequencies"
+}
 ```
 
-Where `CONFIG_NAME` is a config from `src/configs` and `HYDRA_CONFIG_ARGUMENTS` are optional arguments.
-
-To run inference (evaluate the model or save predictions):
-
-```bash
-python3 inference.py HYDRA_CONFIG_ARGUMENTS
+**Промпт 3:**
+```json
+{
+  "description": "An energetic progressive house dance track with a bright detuned synthesizer lead, pumping sidechain bass, and chopped vocal samples over a fast four-on-the-floor beat.",
+  "general_mood": "Energetic, uplifting, party vibe, euphoric",
+  "genre_tags": ["EDM", "Progressive House", "Dance"],
+  "lead_instrument": "Bright, detuned synthesizer lead",
+  "accompaniment": "Pumping sidechain bass, risers, crash cymbals",
+  "tempo_and_rhythm": "Fast, driving, strict four-on-the-floor beat",
+  "vocal_presence": "Chopped vocal samples used as a rhythmic instrument",
+  "production_quality": "Modern, extremely loud, punchy, club-ready mix"
+}
 ```
 
-## Useful Links:
+**Промпт 4:**
+```json
+{
+  "description": "An intimate acoustic folk instrumental featuring a fingerpicked acoustic guitar, light tambourine, and subtle upright bass, played in a gentle waltz-like rhythm.",
+  "general_mood": "Intimate, warm, acoustic, peaceful",
+  "genre_tags": ["Folk", "Acoustic", "Indie"],
+  "lead_instrument": "Fingerpicked acoustic guitar",
+  "accompaniment": "Light tambourine, subtle upright bass, distant ambient room sound",
+  "tempo_and_rhythm": "Mid-tempo, gentle, waltz-like triple meter",
+  "vocal_presence": "None",
+  "production_quality": "Raw, organic, close-mic recording, natural room acoustics"
+}
+```
 
-You may find the following links useful:
+**Промпт 5:**
+```json
+{
+  "description": "A dark cyberpunk synthwave instrumental driven by an aggressive distorted analog bass synthesizer, arpeggiated synth plucks, and a retro 80s drum machine.",
+  "general_mood": "Dark, futuristic, gritty, mysterious",
+  "genre_tags": ["Synthwave", "Cyberpunk", "Darkwave"],
+  "lead_instrument": "Aggressive, distorted analog bass synthesizer",
+  "accompaniment": "Arpeggiated synth plucks, retro 80s drum machine (gated snare)",
+  "tempo_and_rhythm": "Driving, mid-tempo, robotic precision",
+  "vocal_presence": "None",
+  "production_quality": "Retro-futuristic, heavy compression, synthetic, 80s aesthetic"
+}
+```
 
-- [Report branch](https://github.com/Blinorot/pytorch_project_template/tree/report): Guidelines for writing a scientific report/paper (with an emphasis on DL projects).
+---
 
-- [CLAIRE Template](https://github.com/CLAIRE-Labo/python-ml-research-template): additional template by [EPFL CLAIRE Laboratory](https://www.epfl.ch/labs/claire/) that can be combined with ours to enhance experiments reproducibility via [Docker](https://www.docker.com/).
+## Формат сдачи
+1. Ссылка на GitHub-репозиторий с вашим кодом (скрипты парсинга, модифицированный AudioCraft, скрипты инференса).
+2. Ссылка на веса обученной модели (HuggingFace / Google Drive).
+3. Папка с 5 сгенерированными `.wav` файлами, названными `prompt_1.wav` ... `prompt_5.wav`.
+4. Краткий отчет (Markdown/PDF) с описанием:
+   * С какими трудностями столкнулись?
+   * Какую LLM использовали для парсинга и какой системный промпт сработал лучше всего?
+   * Какие гиперпараметры обучения (learning rate, batch size, steps) вы использовали?
+   * Приложите логи обучения (ссылку на WandB/CometML), чтобы можно было оценить процесс обучения.
 
-- [Mamba](https://github.com/mamba-org/mamba) and [Poetry](https://python-poetry.org/): alternatives to [Conda](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html) and [pip](https://pip.pypa.io/en/stable/installation/) package managers given above.
-
-- [Awesome README](https://github.com/matiassingers/awesome-readme): a list of awesome README files for inspiration. Check the basics [here](https://github.com/PurpleBooth/a-good-readme-template).
-
-## Credits
-
-This repository is based on a heavily modified fork of [pytorch-template](https://github.com/victoresque/pytorch-template) and [asr_project_template](https://github.com/WrathOfGrapes/asr_project_template) repositories.
-
-## License
-
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
+**Важно:**
+Как и в Дз2 и Дз3, мы обращаем внимание на читаемость кода и наличие понятной документации. Если код невозможно читать или `README` непонятен, оценка за работу может быть снижена.
+Ваш `README` в репозитории должен четко объяснять:
+1. Как собрать и подготовить датасет.
+2. Как запустить процесс обучения.
+3. Как запустить инференс.

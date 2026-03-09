@@ -39,3 +39,10 @@ download-musiccaps-csv-local:
 .PHONY: download-10-sec-audio
 download-10-sec-audio:
 	$(PYTHON) src/scripts/download_10_sec_audio.py
+
+.PHONY: add-musiccaps-metadata
+add-musiccaps-metadata:
+	$(PYTHON)  src/scripts/add_musiccaps_metadata.py \
+	--model qwen/qwen3.5-9b \
+	--input-dir data/musiccaps_from_csv \
+	--limit 4

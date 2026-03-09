@@ -16,3 +16,4 @@ isort
 pre-commit
 ffmpeg
 ffmpeg-python
+openai

@@ -29,3 +29,12 @@ make download-musiccaps-csv-local
 make download-10-sec-audio
 
 ```
+
+Запуск обогащения данных через локальную модель
+Должно быть включено LM Studio
+Пример запуска:
+```bash
+python src/scripts/add_musiccaps_metadata.py \
+  --input-dir data/musiccaps_from_csv \
+  --limit 200
+```

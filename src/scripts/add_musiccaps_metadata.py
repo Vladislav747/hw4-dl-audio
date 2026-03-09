@@ -65,6 +65,7 @@ def build_client(args: argparse.Namespace) -> OpenAI:
         raise RuntimeError(
             f"Не найден ключ API в переменной окружения OPENAI_API_KEY"
         )
+    # обязательно задавать base_url без base_url стучиться в настоящий OPENAI а надо в локальный
     return OpenAI(api_key=api_key, base_url=base_url)
 
 # Приводим ответ модели к фиксированной схеме REQUIRED_FIELDS: - без этого в json файле будут некорректные значения

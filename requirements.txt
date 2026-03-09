@@ -10,6 +10,7 @@ comet_ml
 hydra-core
 
 yt-dlp==2026.3.3
+datasets
 black
 isort
 pre-commit

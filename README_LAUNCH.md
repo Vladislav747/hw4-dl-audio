@@ -10,4 +10,15 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Запускаем из корня проекта
+Загрузка кеша датасета google/MusicCaps
+```bash
+make download-musiccaps-local
+```
 
+
+Запускаем из корня проекта
+Загрузка csv датасета google/MusicCaps
+```bash
+make download-musiccaps-csv-local
+```

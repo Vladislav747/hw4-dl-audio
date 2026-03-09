@@ -1,0 +1,20 @@
+train:
+  _target_: src.datasets.MusicCapsDataset
+  index_path: "data/musiccaps/index/train.jsonl"
+  sample_rate: 44100
+  mono: true
+  instance_transforms: ${transforms.instance_transforms.train}
+
+val:
+  _target_: src.datasets.MusicCapsDataset
+  index_path: "data/musiccaps/index/val.jsonl"
+  sample_rate: 44100
+  mono: true
+  instance_transforms: ${transforms.instance_transforms.inference}
+
+test:
+  _target_: src.datasets.MusicCapsDataset
+  index_path: "data/musiccaps/index/val.jsonl"
+  sample_rate: 44100
+  mono: true
+  instance_transforms: ${transforms.instance_transforms.inference}

@@ -17,49 +17,6 @@
 *   Напишите скрипт для скачивания аудио.
 *   **Важно:** Не скачивайте видео целиком! Используйте связку `yt-dlp` (для получения прямой ссылки на аудиопоток) и `ffmpeg` (для скачивания конкретного 10-секундного фрагмента напрямую в `.wav` формате.
 
-Скрипт: `src/utils/download_audio_fragment.py`
-Скрипт предзагрузки кэша: `src/utils/cache_musiccaps_dataset.py`
-
-Примеры:
-```bash
-# 1) Скачать один 10-секундный фрагмент по URL
-python src/utils/download_audio_fragment.py "https://www.youtube.com/watch?v=<VIDEO_ID>" \
-  --start 30 --duration 10 -o data/sample.wav
-
-# 2) Пакетно скачать фрагменты из датасета MusicCaps
-python src/utils/download_audio_fragment.py --musiccaps \
-  --split train --offset 0 --limit 200 --duration 10 \
-  --cache-dir data/hf_cache \
-  --output-dir data/musiccaps
-
-# 2a) Сначала предзагрузить датасет в локальный кеш
-python src/utils/cache_musiccaps_dataset.py --split train --cache-dir data/hf_cache
-
-# 2b) Затем использовать только локальный кеш (без сети HF)
-python src/utils/download_audio_fragment.py --musiccaps \
-  --split train --offset 0 --limit 200 --duration 10 \
-  --cache-dir data/hf_cache --local-files-only \
-  --output-dir data/musiccaps
-
-# 3) То же самое через Makefile (одной командой)
-make download-musiccaps
-
-# Пример с переопределением параметров:
-make download-musiccaps MUSICCAPS_LIMIT=500 MUSICCAPS_OUTPUT_DIR=data/musiccaps_train
-
-# Куда класть cache Hugging Face datasets:
-make download-musiccaps MUSICCAPS_CACHE_DIR=data/hf_cache
-
-# Рекомендуемый двухшаговый flow:
-make cache-musiccaps MUSICCAPS_CACHE_DIR=data/hf_cache
-make download-musiccaps-local MUSICCAPS_CACHE_DIR=data/hf_cache
-```
-
-Что делает скрипт:
-- через `yt-dlp -g` получает прямую ссылку на аудиопоток;
-- через `ffmpeg` сохраняет только нужный фрагмент в `wav` (PCM 16-bit, 44.1 kHz);
-- в режиме `--musiccaps` сохраняет рядом с каждым `.wav` файл метаданных `.json`.
-
 ### 2. Обогащение метаданных с помощью LLM (15 баллов)
 Оригинальные описания в MusicCaps — это просто сплошной текст. MusicGen лучше обучается на структурированных данных.
 *   Используйте любую LLM (OpenAI, Gemini, Claude, локальную Llama 3), чтобы перевести сырые текстовые описания (`caption`) в строгий JSON-формат.
@@ -95,7 +52,7 @@ make download-musiccaps-local MUSICCAPS_CACHE_DIR=data/hf_cache
 
 ## Часть 2. Оценка качества генерации (50 баллов)
 
-После того как ваша модель обучится, вам нужно сгенерировать 5 треков (длительностью 10-15 секунд) по заранее заданным структурированным промптам. 
+После того как ваша модель обучится, вам нужно сгенерировать 5 треков (длительностью 10-15 секунд) по заранее заданным структурированным промптам.
 
 Каждый сгенерированный трек оценивается в **10 баллов** (5 баллов за качество звука/отсутствие артефактов + 5 баллов за точное следование всем полям промпта).
 
@@ -177,10 +134,10 @@ make download-musiccaps-local MUSICCAPS_CACHE_DIR=data/hf_cache
 2. Ссылка на веса обученной модели (HuggingFace / Google Drive).
 3. Папка с 5 сгенерированными `.wav` файлами, названными `prompt_1.wav` ... `prompt_5.wav`.
 4. Краткий отчет (Markdown/PDF) с описанием:
-   * С какими трудностями столкнулись?
-   * Какую LLM использовали для парсинга и какой системный промпт сработал лучше всего?
-   * Какие гиперпараметры обучения (learning rate, batch size, steps) вы использовали?
-   * Приложите логи обучения (ссылку на WandB/CometML), чтобы можно было оценить процесс обучения.
+    * С какими трудностями столкнулись?
+    * Какую LLM использовали для парсинга и какой системный промпт сработал лучше всего?
+    * Какие гиперпараметры обучения (learning rate, batch size, steps) вы использовали?
+    * Приложите логи обучения (ссылку на WandB/CometML), чтобы можно было оценить процесс обучения.
 
 **Важно:**
 Как и в Дз2 и Дз3, мы обращаем внимание на читаемость кода и наличие понятной документации. Если код невозможно читать или `README` непонятен, оценка за работу может быть снижена.

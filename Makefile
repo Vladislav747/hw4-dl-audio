@@ -35,3 +35,7 @@ download-musiccaps-local:
 .PHONY: download-musiccaps-csv-local
 download-musiccaps-csv-local:
 	$(PYTHON) src/scripts/load_musiccaps_dataset_csv.py
+
+.PHONY: download-10-sec-audio
+download-10-sec-audio:
+	$(PYTHON) src/scripts/download_10_sec_audio.py

@@ -3,6 +3,8 @@ PYTHON ?= python3
 ifneq (,$(wildcard .env))
 include .env
 export HF_TOKEN
+export OPENAI_BASE_URL="http://localhost:1234/v1"
+export OPENAI_API_KEY="lm-studio"
 endif
 
 MUSICCAPS_SPLIT ?= train

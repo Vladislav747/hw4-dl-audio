@@ -46,7 +46,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--input-dir", default="data/musiccaps_from_csv")
     parser.add_argument("--model", default=None)
-    parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--offset", type=int, default=0, help="С какого индекса в csv начинать обогащение")
     return parser.parse_args()
@@ -55,19 +54,18 @@ def parse_args() -> argparse.Namespace:
 def apply_provider_defaults(args: argparse.Namespace) -> argparse.Namespace:
     if args.model is None:
         args.model = "qwen/qwen3.5-9b"
-    if args.api_key_env is None:
-        args.api_key_env = "OPENAI_API_KEY"
     return args
 
 
 def build_client(args: argparse.Namespace) -> OpenAI:
     print("Building client...")
-    api_key = args.api_key_env
+    api_key = os.getenv("OPENAI_API_KEY", "lm-studio")
+    base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:1234/v1")
     if not api_key:
         raise RuntimeError(
-            f"Не найден ключ API в переменной окружения {args.api_key_env}"
+            f"Не найден ключ API в переменной окружения OPENAI_API_KEY"
         )
-    return OpenAI(api_key=api_key)
+    return OpenAI(api_key=api_key, base_url=base_url)
 
 # Приводим ответ модели к фиксированной схеме REQUIRED_FIELDS: - без этого в json файле будут некорректные значения
 def normalize_payload(payload: Dict[str, Any]) -> Dict[str, Any]:

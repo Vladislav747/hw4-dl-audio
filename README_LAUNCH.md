@@ -33,7 +33,7 @@ make download-10-sec-audio
 Должно быть включено LM Studio
 Пример запуска:
 ```bash
-python src/scripts/add_musiccaps_metadata.py \
+python3 src/scripts/add_musiccaps_metadata.py \
   --input-dir data/musiccaps_from_csv \
   --limit 200
 ```
@@ -65,7 +65,6 @@ pip install -e /Users/vlad/Documents/Web/audiocraft-fork --no-deps
 
 На MacOs не запускается audiocraft на gpu
 Generate | Epoch 1 | 20/50 - как уменьшить?
-догенерить json и wav
 дообогатить данные
 Перенести как то в пайп?
 сгенерить первые по propmt
